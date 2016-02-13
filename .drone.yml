@@ -1,0 +1,26 @@
+matrix:
+  VERSION:
+    - "2.22"
+
+build:
+  image: armhfbuild/docker:1.10-dind
+  privileged: true
+  commands:
+    # FIXME Replace this mess with a better docker-dind based build plugin
+    - docker daemon -s aufs &
+    - sleep 2
+    - docker daemon -s overlay &
+    - sleep 2
+    - docker run --rm -e STDOUT=1 armhfbuild/glibc-builder $$VERSION /usr/glibc-compat >glibc-bin-$$VERSION-armhf.tar.gz
+
+publish:
+  github_release:
+    api_key: $$GITHUB_API_KEY
+    files:
+      - glibc-bin-$$VERSION-armhf.tar.gz
+    checksum: sha1
+
+notify:
+  slack:
+    webhook_url: $$SLACK_WEBHOOK_URL
+    channel: armhf
